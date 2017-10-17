@@ -1,0 +1,77 @@
+package com.maimaiti.mmt.sell.bean;
+
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+
+import com.maimaiti.mmt.base.Constants;
+import com.maimaiti.mmt.utils.UUIDGenerator;
+
+import java.io.ByteArrayOutputStream;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
+
+/**
+ * author : zxt
+ * time   : 2017/07/19 17:21
+ * version: 1.0
+ * desc   : 上传的图片模型
+ */
+public class PicModel {
+    private String timeStamp = new SimpleDateFormat("yyyy-MM-dd", Locale.CHINA).format(new Date());
+    private String ROOT = Constants.ROOT;
+
+    private String key;
+    private String path;
+    private byte[] bytes;
+
+    public PicModel(String path) {
+        //String timeStamp = new SimpleDateFormat("yyyy-MM-dd",Locale.CHINA).format(new Date());
+        //timeStamp + "/" + UUIDGenerator.getUUID() + ".jpg"
+        this.key = ROOT + timeStamp + "/" + UUIDGenerator.getUUID() + ".jpg";
+        this.path = path;
+        this.bytes = getBytes(path);
+    }
+
+    public String getKey() {
+        return key;
+    }
+
+    public void setKey(String key) {
+        this.key = key;
+    }
+
+    public String getPath() {
+        return path;
+    }
+
+    public void setPath(String path) {
+        this.path = path;
+    }
+
+    public byte[] getBytes() {
+        return bytes;
+    }
+
+    public void setBytes(byte[] bytes) {
+        this.bytes = bytes;
+    }
+
+   /* 根据路径获取压缩后的图片字节数组
+    * @param strPath 本地绝对路径
+    * @return 压缩后的图片字节数组
+    */
+    private byte[] getBytes(String strPath) {
+        //尺寸压缩
+        BitmapFactory.Options newOpts = new BitmapFactory.Options();
+        // 开始读入图片，此时把options.inJustDecodeBounds 设回true，即只读边不读内容
+        newOpts.inSampleSize = 4;
+        // Get bitmap info, but notice that bitmap is null now
+        Bitmap bitmap = BitmapFactory.decodeFile(strPath,newOpts);
+        //图片质量压缩
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+//        Bitmap bitmap = BitmapFactory.decodeFile(strPath);
+        bitmap.compress(Bitmap.CompressFormat.JPEG,50, outputStream);
+        return outputStream.toByteArray();
+    }
+}
