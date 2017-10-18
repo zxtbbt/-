@@ -1,0 +1,128 @@
+   /**
+     * 拍照获取图片
+     */
+    private void takePhoto() {
+        String savePath = "";
+        // 判断是否挂载了SD卡
+        String storageState = Environment.getExternalStorageState();
+        if (storageState.equals(Environment.MEDIA_MOUNTED)) {
+            savePath = Environment.getExternalStorageDirectory()
+                    .getAbsolutePath() + "/MMT/CAR_PIC/";// 存放照片的文件夹
+            File savedir = new File(savePath);
+            if (!savedir.exists()) {
+                savedir.mkdirs();
+            }
+        }
+        // 没有挂载SD卡，无法保存文件
+        if (TextUtils.isEmpty(savePath)) {
+            UIUtils.toast("无法保存照片，请检查SD卡是否挂载");
+            return;
+        }
+//        String timeStamp = new SimpleDateFormat("yyyyMMddHHmmss", Locale.CHINA).format(new Date());
+//        String fileName = "" + timeStamp + ".jpg";// 照片命名
+        String fileName = "" + System.currentTimeMillis() + ".jpg";// 照片命名
+        File out = new File(savePath, fileName);
+        Uri uri = Uri.fromFile(out);
+        picPath = savePath + fileName;// 该照片的绝对路径
+
+        Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        intent.putExtra(MediaStore.EXTRA_OUTPUT, uri);
+        this.startActivityForResult(intent, 1);
+    }
+
+    /***
+     * 从相册中取图片
+     */
+    private void pickPhoto() {
+        Intent intent = new Intent();
+        intent.setType("image/*");
+        if (ROMUtils.isFlyme()){
+            intent.setAction(Intent.ACTION_GET_CONTENT);
+            this.startActivityForResult(intent, 4);
+        }else {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                intent.setAction(Intent.ACTION_PICK);
+                this.startActivityForResult(intent, 2);
+            } else {
+                intent.setAction(Intent.ACTION_GET_CONTENT);
+                this.startActivityForResult(intent, 3);
+            }
+        }
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (MainActivity.RESULT_OK == resultCode) {
+            switch (requestCode) {
+                case 1:
+                    if ((!TextUtils.isEmpty(picPath))
+                            && ((picPath.endsWith(".png")
+                            || picPath.endsWith(".PNG")
+                            || picPath.endsWith(".jpg")
+                            || picPath.endsWith(".JPG")))) {
+                        setPic(picPath);
+                    }
+                    break;
+                case 2://android 4.3 以上
+                    if (data == null || data.getData() == null) {
+                        UIUtils.toast("选择图片文件出错");
+                        return;
+                    }
+                    Uri picUri = data.getData();
+                    picPath = picUri.getPath().replace("raw//","");
+                    if (TextUtils.isEmpty(picPath)) {
+                        return;
+                    }
+                    if (((picPath.endsWith(".png")
+                            || picPath.endsWith(".PNG")
+                            || picPath.endsWith(".jpg")
+                            || picPath.endsWith(".JPG")))){
+                        setPic(picPath);
+                    }else{
+                        pickPicOld(data);
+                    }
+                    break;
+                case 3://android 4.3 以下
+                    if (pickPicOld(data)) return;
+                    break;
+                case 4://魅族
+                    if (pickPicOld(data)) return;
+                    break;
+                default:
+                    break;
+            }
+        }
+        super.onActivityResult(requestCode, resultCode, data);
+    }
+    /*
+     * 从相册中取图片,Android高版本无法获取图片路径，使用低版本方法重新获取
+     */
+    private boolean pickPicOld(Intent data) {
+        if (data == null || data.getData() == null) {
+            UIUtils.toast("选择图片文件出错");
+            return true;
+        }
+        Uri picUri2 = data.getData();
+        try {
+            String[] proj = {MediaStore.Images.Media.DATA};
+            Cursor cursor = getActivity().getContentResolver().query(picUri2,proj,null,null,null);
+            if (cursor == null) {
+                return true;
+            }
+            if(cursor.moveToFirst()){
+                int column_index = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
+                picPath = cursor.getString(column_index).replace("raw//","");
+            }
+            cursor.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        if ((!TextUtils.isEmpty(picPath))
+                && ((picPath.endsWith(".png")
+                || picPath.endsWith(".PNG")
+                || picPath.endsWith(".jpg")
+                || picPath.endsWith(".JPG")))) {
+            setPic(picPath);
+        }
+        return false;
+    }
