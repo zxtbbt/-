@@ -1,0 +1,31 @@
+    /**
+     * 保存List
+     *
+     * @param datalist
+     */
+    public void saveZoneList(List<CountryBean.DistrictsBeanXXX.DistrictsBeanXX> datalist) {
+        if (null == datalist || datalist.size() <= 0)
+            return;
+
+        Gson gson = new Gson();
+        //转换成json数据，再保存
+        String strJson = gson.toJson(datalist);
+        mSharedPreferences.edit().clear().apply();
+        mSharedPreferences.edit().putString(ZONE_LIST, strJson).apply();
+
+    }
+
+    /**
+     * 获取List
+     */
+    public List<CountryBean.DistrictsBeanXXX.DistrictsBeanXX> getZoneList() {
+        List<CountryBean.DistrictsBeanXXX.DistrictsBeanXX> datalist = new ArrayList<>();
+        String strJson = mSharedPreferences.getString(ZONE_LIST, "");
+        if (TextUtils.isEmpty(strJson)) {
+            return datalist;
+        }
+        Gson gson = new Gson();
+        datalist = gson.fromJson(strJson, new TypeToken<List<CountryBean.DistrictsBeanXXX.DistrictsBeanXX>>() {
+        }.getType());
+        return datalist;
+    }
